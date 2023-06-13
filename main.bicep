@@ -66,6 +66,9 @@ param firstVmName string = 'first-vm'
 @description('Name of the second virtual machine that we load balance to')
 param secondVmName string = 'second-vm'
 
+@description('Name of the ADC vm')
+param adcVmName string = 'adcvm'
+
 @description('Security Type of the Virtual Machines.')
 @allowed([
   'Standard'
@@ -76,6 +79,7 @@ param securityType string = 'TrustedLaunch'
 var storageAccountName = 'bootdiags${uniqueString(resourceGroup().id)}'
 var firstNicName = 'firstVMNic'
 var secondNicName = 'secondVMNic'
+var adcNicName = 'adcVMNic'
 var addressPrefix = '10.0.0.0/16'
 var subnetName = 'Subnet'
 var subnetPrefix = '10.0.0.0/24'
@@ -116,12 +120,25 @@ resource publicIp 'Microsoft.Network/publicIPAddresses@2022-05-01' = {
   }
 }
 
-// TODO: communication between machines in the NSG (first VM shouldn't be able to talk to second vm, etc)
+// Allow ssh access from the complete outside to port 22
 resource networkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2022-05-01' = {
   name: networkSecurityGroupName
   location: location
   properties: {
     securityRules: [
+      {
+        name: 'default-allow-22'
+        properties: {
+          priority: 1000
+          access: 'Allow'
+          direction: 'Inbound'
+          destinationPortRange: '22'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+        }
+      }
     ]
   }
 }
@@ -351,6 +368,89 @@ resource secondVmPostCreationScript 'Microsoft.Compute/virtualMachines/runComman
     source: {
       scriptUri: 'https://raw.githubusercontent.com/sebug/adc-stylebooks/main/secondVM.ps1'
     }
+  }
+}
+
+resource adcNic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
+  name: adcNicName
+  location: location
+  properties: {
+    ipConfigurations: [
+      {
+        name: 'ipconfig3'
+        properties: {
+          privateIPAllocationMethod: 'Dynamic'
+          publicIPAddress: {
+            id: publicIp.id
+          }
+          subnet: {
+            id: resourceId('Microsoft.Network/virtualNetworks/subnets', virtualNetworkName, subnetName)
+          }
+        }
+      }
+    ]
+  }
+  dependsOn: [
+    virtualNetwork
+  ]
+}
+
+resource adcVM 'Microsoft.Compute/virtualMachines@2022-03-01' = {
+  name: adcVmName
+  location: location
+  properties: {
+    hardwareProfile: {
+      vmSize: vmSize
+    }
+    osProfile: {
+      computerName: adcVmName
+      adminUsername: adminUsername
+      adminPassword: adminPassword
+      linuxConfiguration: {
+        patchSettings: {
+          patchMode: 'ImageDefault'
+        }
+      }
+    }
+    storageProfile: {
+      imageReference: {
+        publisher: 'citrix'
+        offer: 'netscalervpx-131'
+        sku: 'netscalervpxexpress'
+        version: 'latest'
+      }
+      osDisk: {
+        createOption: 'FromImage'
+        managedDisk: {
+          storageAccountType: 'StandardSSD_LRS'
+        }
+      }
+      dataDisks: [
+        {
+          diskSizeGB: 1023
+          lun: 0
+          createOption: 'Empty'
+        }
+      ]
+    }
+    networkProfile: {
+      networkInterfaces: [
+        {
+          id: adcNic.id
+        }
+      ]
+    }
+    diagnosticsProfile: {
+      bootDiagnostics: {
+        enabled: true
+        storageUri: storageModule.outputs.storageURI
+      }
+    }
+  }
+  plan: {
+    name: 'netscalervpxexpress'
+    publisher: 'citrix'
+    product: 'netscalervpx-131'
   }
 }
 

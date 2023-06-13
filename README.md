@@ -20,5 +20,7 @@ in the final setup, but in the meantime it's a good way to play around.
 Some VM post-configuration will simply be done by a PowerShell script - I'd like to do better, but at the
 moment that seems to be the easiest (plus I'm gonna delete those machines often anyway).
 
+For ADC, I started by enable automatic provisioning of Citrix ADC 13.1 (Express) and enabled that on my subscription.
+
 
 
