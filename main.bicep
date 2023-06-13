@@ -98,7 +98,7 @@ var frontEndSubnetPrefix = '22.22.1.0/24'
 var backEndSubnetName = 'NSBackEnd'
 var backEndSubnetPrefix = '22.22.2.0/24'
 var manageSubnetName = 'NSManage'
-var manageSubnetPrefix = '22.22.3.0'
+var manageSubnetPrefix = '22.22.3.0/24'
 
 var virtualNetworkName = 'MyVNET'
 var manageNetworkSecurityGroupName = 'manage-NSG'
