@@ -696,9 +696,15 @@ resource adcVM 'Microsoft.Compute/virtualMachines@2022-03-01' = {
       networkInterfaces: [
         {
           id: manageNic.id
+          properties: {
+            primary: true
+          }
         }
         {
           id: adcNic.id
+          properties: {
+            primary: false
+          }
         }
       ]
     }
