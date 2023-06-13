@@ -356,11 +356,38 @@ resource frontendNetworkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2
   }
 }
 
+// allow http traffic as well since we can only have 2 network interfaces :-(
 resource backendNetworkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2022-05-01' = {
   name: backendNetworkSecurityGroupName
   location: location
   properties: {
     securityRules: [
+      {
+        name: 'default-allow-80'
+        properties: {
+          priority: 1001
+          access: 'Allow'
+          direction: 'Inbound'
+          destinationPortRange: '80'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+        }
+      }
+      {
+        name: 'default-allow-443'
+        properties: {
+          priority: 1002
+          access: 'Allow'
+          direction: 'Inbound'
+          destinationPortRange: '443'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+        }
+      }
     ]
   }
 }

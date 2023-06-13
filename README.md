@@ -28,5 +28,11 @@ For ADC, I started by enable automatic provisioning of Citrix ADC 13.1 (Express)
 
 I enabled the management ports on the management IP and then connected to said IP using HTTP.
 
+Set the subnet IP as 22.22.2.6 (or whatever was assigned to the second network interface of the ADC vm). You may have to delete the existing entry for that network interface.
+
+Add services using HTTP 80 probe for first and second VM.
+
+Add a virtual server with the second public IP address - call it mainvs
+
 
 
