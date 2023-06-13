@@ -268,9 +268,7 @@ resource firstVmPostCreationScript 'Microsoft.Compute/virtualMachines/runCommand
   location: location
   properties: {
     source: {
-      script: '''
-      Add-WindowsFeature Web-Server
-      '''
+      scriptUri: 'https://raw.githubusercontent.com/sebug/adc-stylebooks/main/firstVM.ps1'
     }
   }
 }
@@ -351,9 +349,9 @@ resource secondVmPostCreationScript 'Microsoft.Compute/virtualMachines/runComman
   location: location
   properties: {
     source: {
-      script: '''
-      Add-WindowsFeature Web-Server
-      '''
+      scriptUri: 'https://raw.githubusercontent.com/sebug/adc-stylebooks/main/secondVM.ps1'
     }
   }
 }
+
+
