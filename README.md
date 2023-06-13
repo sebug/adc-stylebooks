@@ -32,7 +32,7 @@ Set the subnet IP as 22.22.2.6 (or whatever was assigned to the second network i
 
 Add services using HTTP 80 probe for first and second VM.
 
-Add a virtual server with the second public IP address - call it mainvs
+The next step is not completely clear - we kinda want to use the second IP address but I don't know how.
 
 
 
