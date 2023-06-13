@@ -102,6 +102,26 @@ module storageModule 'storage.bicep' = {
   }
 }
 
+// DSC storage - see https://r3dlin3.github.io/2022/03/13/bicep-vm-dsc-extension/
+param dscStorageAccountName string = 'dscsa${uniqueString(resourceGroup().id)}'
+param containerName string = 'dsc'
+
+resource dscSA 'Microsoft.Storage/storageAccounts@2022-05-01' = {
+  name: dscStorageAccountName
+  location: location
+  sku: {
+    name: 'Standard_LRS'
+  }
+  kind: 'StorageV2'
+  properties: {
+    accessTier: 'Hot'
+  }
+}
+
+resource container 'Microsoft.Storage/storageAccounts/blobServices/containers@2019-06-01' = {
+  name: '${dscSA.name}/default/${containerName}'
+}
+
 resource publicIp 'Microsoft.Network/publicIPAddresses@2022-05-01' = {
   name: publicIpName
   location: location
