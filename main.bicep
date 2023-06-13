@@ -414,7 +414,8 @@ resource firstNic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
       {
         name: 'ipconfig1'
         properties: {
-          privateIPAllocationMethod: 'Dynamic'
+          privateIPAllocationMethod: 'Static'
+          privateIPAddress: '22.22.2.10'
           subnet: {
             id: resourceId('Microsoft.Network/virtualNetworks/subnets', virtualNetworkName, backEndSubnetName)
           }
@@ -435,7 +436,8 @@ resource secondNic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
       {
         name: 'ipconfig2'
         properties: {
-          privateIPAllocationMethod: 'Dynamic'
+          privateIPAllocationMethod: 'Static'
+          privateIPAddress: '22.22.2.11'
           subnet: {
             id: resourceId('Microsoft.Network/virtualNetworks/subnets', virtualNetworkName, backEndSubnetName)
           }
@@ -618,7 +620,8 @@ resource manageNic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
       {
         name: 'ipconfig4'
         properties: {
-          privateIPAllocationMethod: 'Dynamic'
+          privateIPAllocationMethod: 'Static'
+          privateIPAddress: '22.22.3.50'
           publicIPAddress: {
             id: manageIp.id
           }
@@ -639,7 +642,8 @@ resource adcNic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
       {
         name: 'ipconfig3'
         properties: {
-          privateIPAllocationMethod: 'Dynamic'
+          privateIPAllocationMethod: 'Static'
+          privateIPAddress: '22.22.1.50'
           publicIPAddress: {
             id: publicIp.id
           }
@@ -663,7 +667,8 @@ resource internalServerAccessNic 'Microsoft.Network/networkInterfaces@2022-05-01
       {
         name: 'ipconfig4'
         properties: {
-          privateIPAllocationMethod: 'Dynamic'
+          privateIPAllocationMethod: 'Static'
+          privateIPAddress: '22.22.2.50'
           subnet: {
             id: resourceId('Microsoft.Network/virtualNetworks/subnets', virtualNetworkName, backEndSubnetName)
           }
