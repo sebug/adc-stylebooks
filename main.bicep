@@ -631,9 +631,6 @@ resource manageNic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
   }
 }
 
-// ideally we'd have a separate interface for the public sites and the one where we can relay
-// traffic to the back-end machines, but the machine size only allows two, so we use this one for
-// both tasks
 resource adcNic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
   name: adcNicName
   location: location
@@ -646,6 +643,27 @@ resource adcNic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
           publicIPAddress: {
             id: publicIp.id
           }
+          subnet: {
+            id: resourceId('Microsoft.Network/virtualNetworks/subnets', virtualNetworkName, frontEndSubnetName)
+          }
+        }
+      }
+    ]
+  }
+  dependsOn: [
+    virtualNetwork
+  ]
+}
+
+resource internalServerAccessNic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
+  name: internalServerAccessNicName
+  location: location
+  properties: {
+    ipConfigurations: [
+      {
+        name: 'ipconfig4'
+        properties: {
+          privateIPAllocationMethod: 'Dynamic'
           subnet: {
             id: resourceId('Microsoft.Network/virtualNetworks/subnets', virtualNetworkName, backEndSubnetName)
           }
@@ -663,7 +681,7 @@ resource adcVM 'Microsoft.Compute/virtualMachines@2022-03-01' = {
   location: location
   properties: {
     hardwareProfile: {
-      vmSize: vmSize
+      vmSize: 'Standard_A4'
     }
     osProfile: {
       computerName: adcVmName
@@ -706,6 +724,12 @@ resource adcVM 'Microsoft.Compute/virtualMachines@2022-03-01' = {
         }
         {
           id: adcNic.id
+          properties: {
+            primary: false
+          }
+        }
+        {
+          id: internalServerAccessNic.id
           properties: {
             primary: false
           }
