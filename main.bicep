@@ -278,7 +278,7 @@ resource manageNetworkSecurityGroup 'Microsoft.Network/networkSecurityGroups@202
       {
         name: 'default-allow-3003'
         properties: {
-          priority: 1008
+          priority: 1009
           access: 'Allow'
           direction: 'Inbound'
           destinationPortRange: '3003'
@@ -291,7 +291,7 @@ resource manageNetworkSecurityGroup 'Microsoft.Network/networkSecurityGroups@202
       {
         name: 'default-allow-4500'
         properties: {
-          priority: 1009
+          priority: 1010
           access: 'Allow'
           direction: 'Inbound'
           destinationPortRange: '4500'
@@ -304,7 +304,7 @@ resource manageNetworkSecurityGroup 'Microsoft.Network/networkSecurityGroups@202
       {
         name: 'default-allow-7000'
         properties: {
-          priority: 1010
+          priority: 1011
           access: 'Allow'
           direction: 'Inbound'
           destinationPortRange: '7000'
@@ -341,7 +341,7 @@ resource frontendNetworkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2
       {
         name: 'default-allow-443'
         properties: {
-          priority: 1001
+          priority: 1002
           access: 'Allow'
           direction: 'Inbound'
           destinationPortRange: '443'
