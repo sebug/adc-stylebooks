@@ -32,7 +32,7 @@ If it is not automatically selected (it should be), set the subnet IP as 22.22.2
 
 Add a virtual server pointing to the private IP address of the adcVMNic, name mainvs.
 
-Go to services. Add the two VM private IPs as services first-vm and second-vm.
+Go to services. Add the two VM private IPs as services first-vm (22.22.2.10) and second-vm (22.22.2.11).
 
 Add a service group mainsg
 
