@@ -9,8 +9,14 @@ param adminPassword string
 @description('Unique DNS Name for the Public IP used to access the load balancer.')
 param dnsLabelPrefix string = toLower('adc-${uniqueString(resourceGroup().id)}')
 
+@description('Unique name for the Public IP used to manage the load balancer')
+param manageDNSLabelPrefix string = toLower('manage-${uniqueString(resourceGroup().id)}')
+
 @description('Name for the Public IP used to access the load balancer.')
 param publicIpName string = 'myPublicIP'
+
+@description('Name for the Public IP used to manage the load balancer')
+param manageIpName string = 'managePublicIP'
 
 @description('Allocation method for the Public IP used to access the load balancer.')
 @allowed([
@@ -19,12 +25,16 @@ param publicIpName string = 'myPublicIP'
 ])
 param publicIPAllocationMethod string = 'Dynamic'
 
+param manageIPAllocationMethod string = 'Dynamic'
+
 @description('SKU for the Public IP used to access the load balancer.')
 @allowed([
   'Basic'
   'Standard'
 ])
 param publicIpSku string = 'Basic'
+
+param manageIpSku string = 'Basic'
 
 @description('The Windows version for the load balanced VMs. This will pick a fully patched image of this given Windows version.')
 @allowed([
@@ -86,8 +96,11 @@ var frontEndAddressPrefix = '22.22.0.0/16'
 var frontEndSubnetPrefix = '22.22.1.0/24'
 var backEndSubnetName = 'NSBackEnd'
 var backEndSubnetPrefix = '22.22.2.0/24'
+var manageSubnetName = 'NSManage'
+var manageSubnetPrefix = '22.22.3.0'
 
 var virtualNetworkName = 'MyVNET'
+var manageNetworkSecurityGroupName = 'manage-NSG'
 var frontendNetworkSecurityGroupName = 'frontend-NSG'
 var backendNetworkSecurityGroupName = 'backend-NSG'
 var securityProfileJson = {
@@ -125,15 +138,25 @@ resource publicIp 'Microsoft.Network/publicIPAddresses@2022-05-01' = {
   }
 }
 
-// Allow ssh access from the complete outside to port 22
-// Allow HTTP 80
-resource frontendNetworkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2022-05-01' = {
-  name: frontendNetworkSecurityGroupName
+resource manageIp 'Microsoft.Network/publicIPAddresses@2022-05-01' = {
+  name: manageIpName
+  location: location
+  sku: {
+    name: manageIpSku
+  }
+  properties: {
+    publicIPAllocationMethod: manageIPAllocationMethod
+    dnsSettings: {
+      domainNameLabel: manageDNSLabelPrefix
+    }
+  }
+}
+
+resource manageNetworkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2022-05-01' = {
+  name: manageNetworkSecurityGroupName
   location: location
   properties: {
     securityRules: [
-// Allow 22 would normally not be in the frontend - we are doing this here
-// for easier configuration
       {
         name: 'default-allow-22'
         properties: {
@@ -154,6 +177,173 @@ resource frontendNetworkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2
           access: 'Allow'
           direction: 'Inbound'
           destinationPortRange: '80'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+        }
+      }
+      {
+        name: 'default-allow-443'
+        properties: {
+          priority: 1002
+          access: 'Allow'
+          direction: 'Inbound'
+          destinationPortRange: '443'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+        }
+      }
+      {
+        name: 'default-allow-3008-3011'
+        properties: {
+          priority: 1003
+          access: 'Allow'
+          direction: 'Inbound'
+          destinationPortRange: '3008-3011'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+        }
+      }
+      {
+        name: 'default-allow-4001'
+        properties: {
+          priority: 1004
+          access: 'Allow'
+          direction: 'Inbound'
+          destinationPortRange: '4001'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+        }
+      }
+      {
+        name: 'default-allow-67'
+        properties: {
+          priority: 1005
+          access: 'Allow'
+          direction: 'Inbound'
+          destinationPortRange: '67'
+          protocol: 'Udp'
+          sourcePortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+        }
+      }
+      {
+        name: 'default-allow-123'
+        properties: {
+          priority: 1006
+          access: 'Allow'
+          direction: 'Inbound'
+          destinationPortRange: '123'
+          protocol: 'Udp'
+          sourcePortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+        }
+      }
+      {
+        name: 'default-allow-161'
+        properties: {
+          priority: 1007
+          access: 'Allow'
+          direction: 'Inbound'
+          destinationPortRange: '161'
+          protocol: 'Udp'
+          sourcePortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+        }
+      }
+      {
+        name: 'default-allow-500'
+        properties: {
+          priority: 1008
+          access: 'Allow'
+          direction: 'Inbound'
+          destinationPortRange: '500'
+          protocol: 'Udp'
+          sourcePortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+        }
+      }
+      {
+        name: 'default-allow-3003'
+        properties: {
+          priority: 1008
+          access: 'Allow'
+          direction: 'Inbound'
+          destinationPortRange: '3003'
+          protocol: 'Udp'
+          sourcePortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+        }
+      }
+      {
+        name: 'default-allow-4500'
+        properties: {
+          priority: 1009
+          access: 'Allow'
+          direction: 'Inbound'
+          destinationPortRange: '4500'
+          protocol: 'Udp'
+          sourcePortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+        }
+      }
+      {
+        name: 'default-allow-7000'
+        properties: {
+          priority: 1010
+          access: 'Allow'
+          direction: 'Inbound'
+          destinationPortRange: '7000'
+          protocol: 'Udp'
+          sourcePortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+        }
+      }
+    ]
+  }
+}
+
+// Allow ssh access from the complete outside to port 22
+// Allow HTTP 80
+resource frontendNetworkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2022-05-01' = {
+  name: frontendNetworkSecurityGroupName
+  location: location
+  properties: {
+    securityRules: [
+      {
+        name: 'default-allow-80'
+        properties: {
+          priority: 1001
+          access: 'Allow'
+          direction: 'Inbound'
+          destinationPortRange: '80'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+        }
+      }
+      {
+        name: 'default-allow-443'
+        properties: {
+          priority: 1001
+          access: 'Allow'
+          direction: 'Inbound'
+          destinationPortRange: '443'
           protocol: 'Tcp'
           sourcePortRange: '*'
           sourceAddressPrefix: '*'
@@ -183,6 +373,15 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2022-05-01' = {
       ]
     }
     subnets: [
+      {
+        name: manageSubnetName
+        properties: {
+          addressPrefix: manageSubnetPrefix
+          networkSecurityGroup: {
+            id: manageNetworkSecurityGroup.id
+          }
+        }
+      }
       {
         name: frontEndSubnetName
         properties: {
@@ -410,6 +609,26 @@ resource secondVmPostCreationScript 'Microsoft.Compute/virtualMachines/runComman
   }
 }
 
+resource manageNic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
+  name: manageNicName
+  location: location
+  properties: {
+    ipConfigurations: [
+      {
+        name: 'ipconfig4'
+        properties: {
+          privateIPAllocationMethod: 'Dynamic'
+          publicIPAddress: {
+            id: manageIp.id
+          }
+          subnet: {
+            id: resourceId('Microsoft.Network/virtualNetworks/subnets', virtualNetworkName, manageSubnetName)
+          }
+        }
+      }
+    ]
+  }
+
 resource adcNic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
   name: adcNicName
   location: location
@@ -474,6 +693,9 @@ resource adcVM 'Microsoft.Compute/virtualMachines@2022-03-01' = {
     }
     networkProfile: {
       networkInterfaces: [
+        {
+          id: manageNic.id
+        }
         {
           id: adcNic.id
         }

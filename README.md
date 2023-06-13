@@ -10,6 +10,8 @@ Create a resource group ADCTestRG .
 
 For the main.bicep we inspire ourselves by https://docs.netscaler.com/en-us/citrix-adc/current-release/deploying-vpx/deploy-vpx-on-azure/configure-vpx-standalone-arm.html
 
+or this one, rather: https://docs.netscaler.com/en-us/citrix-application-delivery-management-service/hybrid-multi-cloud-deployments/provisioning-vpx-azure.html
+
 From the Azure cloud shell (as to not have any credentials locally):
 
     git clone https://github.com/sebug/adc-stylebooks.git
