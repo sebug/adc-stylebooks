@@ -315,19 +315,6 @@ resource manageNetworkSecurityGroup 'Microsoft.Network/networkSecurityGroups@202
           destinationAddressPrefix: '*'
         }
       }
-      {
-        name: 'default-allow-81'
-        properties: {
-          priority: 1012
-          access: 'Allow'
-          direction: 'Inbound'
-          destinationPortRange: '81'
-          protocol: 'Tcp'
-          sourcePortRange: '*'
-          sourceAddressPrefix: '*'
-          destinationAddressPrefix: '*'
-        }
-      }
     ]
   }
 }
