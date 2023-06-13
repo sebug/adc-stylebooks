@@ -90,6 +90,7 @@ var storageAccountName = 'bootdiags${uniqueString(resourceGroup().id)}'
 var firstNicName = 'firstVMNic'
 var secondNicName = 'secondVMNic'
 var adcNicName = 'adcVMNic'
+var manageNicName = 'manageVMNic'
 
 var frontEndSubnetName = 'NSFrontEnd'
 var frontEndAddressPrefix = '22.22.0.0/16'
@@ -421,7 +422,6 @@ resource firstNic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
     ]
   }
   dependsOn: [
-
     virtualNetwork
   ]
 }
@@ -628,6 +628,7 @@ resource manageNic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
       }
     ]
   }
+}
 
 resource adcNic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
   name: adcNicName
