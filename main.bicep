@@ -80,11 +80,16 @@ var storageAccountName = 'bootdiags${uniqueString(resourceGroup().id)}'
 var firstNicName = 'firstVMNic'
 var secondNicName = 'secondVMNic'
 var adcNicName = 'adcVMNic'
-var addressPrefix = '10.0.0.0/16'
-var subnetName = 'Subnet'
-var subnetPrefix = '10.0.0.0/24'
+
+var frontEndSubnetName = 'NSFrontEnd'
+var frontEndAddressPrefix = '22.22.0.0/16'
+var frontEndSubnetPrefix = '22.22.1.0/24'
+var backEndSubnetName = 'NSBackEnd'
+var backEndSubnetPrefix = '22.22.2.0/24'
+
 var virtualNetworkName = 'MyVNET'
-var networkSecurityGroupName = 'default-NSG'
+var frontendNetworkSecurityGroupName = 'frontend-NSG'
+var backendNetworkSecurityGroupName = 'backend-NSG'
 var securityProfileJson = {
   uefiSettings: {
     secureBootEnabled: true
@@ -121,11 +126,14 @@ resource publicIp 'Microsoft.Network/publicIPAddresses@2022-05-01' = {
 }
 
 // Allow ssh access from the complete outside to port 22
-resource networkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2022-05-01' = {
-  name: networkSecurityGroupName
+// Allow HTTP 80
+resource frontendNetworkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2022-05-01' = {
+  name: frontendNetworkSecurityGroupName
   location: location
   properties: {
     securityRules: [
+// Allow 22 would normally not be in the frontend - we are doing this here
+// for easier configuration
       {
         name: 'default-allow-22'
         properties: {
@@ -139,6 +147,28 @@ resource networkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2022-05-0
           destinationAddressPrefix: '*'
         }
       }
+      {
+        name: 'default-allow-80'
+        properties: {
+          priority: 1001
+          access: 'Allow'
+          direction: 'Inbound'
+          destinationPortRange: '80'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+        }
+      }
+    ]
+  }
+}
+
+resource backendNetworkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2022-05-01' = {
+  name: backendNetworkSecurityGroupName
+  location: location
+  properties: {
+    securityRules: [
     ]
   }
 }
@@ -149,16 +179,25 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2022-05-01' = {
   properties: {
     addressSpace: {
       addressPrefixes: [
-        addressPrefix
+        frontEndAddressPrefix
       ]
     }
     subnets: [
       {
-        name: subnetName
+        name: frontEndSubnetName
         properties: {
-          addressPrefix: subnetPrefix
+          addressPrefix: frontEndSubnetPrefix
           networkSecurityGroup: {
-            id: networkSecurityGroup.id
+            id: frontendNetworkSecurityGroup.id
+          }
+        }
+      }
+      {
+        name: backEndSubnetName
+        properties: {
+          addressPrefix: backEndSubnetPrefix
+          networkSecurityGroup: {
+            id: backendNetworkSecurityGroup.id
           }
         }
       }
@@ -176,7 +215,7 @@ resource firstNic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
         properties: {
           privateIPAllocationMethod: 'Dynamic'
           subnet: {
-            id: resourceId('Microsoft.Network/virtualNetworks/subnets', virtualNetworkName, subnetName)
+            id: resourceId('Microsoft.Network/virtualNetworks/subnets', virtualNetworkName, backEndSubnetName)
           }
         }
       }
@@ -198,7 +237,7 @@ resource secondNic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
         properties: {
           privateIPAllocationMethod: 'Dynamic'
           subnet: {
-            id: resourceId('Microsoft.Network/virtualNetworks/subnets', virtualNetworkName, subnetName)
+            id: resourceId('Microsoft.Network/virtualNetworks/subnets', virtualNetworkName, backEndSubnetName)
           }
         }
       }
@@ -384,7 +423,7 @@ resource adcNic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
             id: publicIp.id
           }
           subnet: {
-            id: resourceId('Microsoft.Network/virtualNetworks/subnets', virtualNetworkName, subnetName)
+            id: resourceId('Microsoft.Network/virtualNetworks/subnets', virtualNetworkName, frontEndSubnetName)
           }
         }
       }
