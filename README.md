@@ -28,11 +28,25 @@ For ADC, I started by enable automatic provisioning of Citrix ADC 13.1 (Express)
 
 I enabled the management ports on the management IP and then connected to said IP using HTTP.
 
-Set the subnet IP as 22.22.2.6 (or whatever was assigned to the second network interface of the ADC vm). You may have to delete the existing entry for that network interface.
+If it is not automatically selected (it should be), set the subnet IP as 22.22.2.6 (or whatever was assigned to the isVMNic interface of your ADC VM).
 
-Add services using HTTP 80 probe for first and second VM.
+Add a virtual server pointing to the private IP address of the adcVMNic, name mainvs.
 
-The next step is not completely clear - we kinda want to use the second IP address but I don't know how.
+Go to services. Add the two VM private IPs as services first-vm and second-vm.
+
+Add a service group mainsg
+
+Add the two servers as service group members.
+
+Go back to the virtual server, edit mainvs.
+
+Add the mainsg service group as binding.
+
+Now jot down the public IP address of the adcVMNic and connect to it via http on the port. See that it switches between the content of server 1 and 2.
+
+
+
+
 
 
 
