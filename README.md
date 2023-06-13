@@ -26,6 +26,7 @@ moment that seems to be the easiest (plus I'm gonna delete those machines often 
 
 For ADC, I started by enable automatic provisioning of Citrix ADC 13.1 (Express) and enabled that on my subscription. Took the template.json and tried to integrate it in my main.bicep
 
-I enabled port 22 external access so that I can perform the rest of the setup (and maybe tunnel the UI setup, who knows...)
+I enabled the management ports on the management IP and then connected to said IP using HTTP.
+
 
 

@@ -91,6 +91,7 @@ var firstNicName = 'firstVMNic'
 var secondNicName = 'secondVMNic'
 var adcNicName = 'adcVMNic'
 var manageNicName = 'manageVMNic'
+var internalServerAccessNicName = 'isVMNic'
 
 var frontEndSubnetName = 'NSFrontEnd'
 var frontEndAddressPrefix = '22.22.0.0/16'
@@ -654,6 +655,27 @@ resource adcNic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
   ]
 }
 
+resource internalServerNic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
+  name: internalServerAccessNicName
+  location: location
+  properties: {
+    ipConfigurations: [
+      {
+        name: 'ipconfig4'
+        properties: {
+          privateIPAllocationMethod: 'Dynamic'
+          subnet: {
+            id: resourceId('Microsoft.Network/virtualNetworks/subnets', virtualNetworkName, backEndSubnetName)
+          }
+        }
+      }
+    ]
+  }
+  dependsOn: [
+    virtualNetwork
+  ]
+}
+
 resource adcVM 'Microsoft.Compute/virtualMachines@2022-03-01' = {
   name: adcVmName
   location: location
@@ -702,6 +724,12 @@ resource adcVM 'Microsoft.Compute/virtualMachines@2022-03-01' = {
         }
         {
           id: adcNic.id
+          properties: {
+            primary: false
+          }
+        }
+        {
+          id: internalServerNic.id
           properties: {
             primary: false
           }
