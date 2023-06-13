@@ -1,3 +1,6 @@
+@description('Username for the virtual machines')
+param adminUsername string
+
 @description('Password for the virtual machines')
 @minLength(12)
 @secure()
@@ -70,4 +73,261 @@ param secondVmName string = 'second-vm'
 ])
 param securityType string = 'TrustedLaunch'
 
+var storageAccountName = 'bootdiags${uniqueString(resourceGroup().id)}'
+var firstNicName = 'firstVMNic'
+var secondNicName = 'secondVMNic'
+var addressPrefix = '10.0.0.0/16'
+var subnetName = 'Subnet'
+var subnetPrefix = '10.0.0.0/24'
+var virtualNetworkName = 'MyVNET'
+var networkSecurityGroupName = 'default-NSG'
+var securityProfileJson = {
+  uefiSettings: {
+    secureBootEnabled: true
+    vTpmEnabled: true
+  }
+  securityType: securityType
+}
+var extensionName = 'GuestAttestation'
+var extensionPublisher = 'Microsoft.Azure.Security.WindowsAttestation'
+var extensionVersion = '1.0'
+var maaTenantName = 'GuestAttestation'
+var maaEndpoint = substring('emptyString', 0, 0)
 
+module storageModule 'storage.bicep' = {
+  name: 'storageTemplate'
+  params: {
+    location: location
+    storageAccountName: storageAccountName
+  }
+}
+
+resource publicIp 'Microsoft.Network/publicIPAddresses@2022-05-01' = {
+  name: publicIpName
+  location: location
+  sku: {
+    name: publicIpSku
+  }
+  properties: {
+    publicIPAllocationMethod: publicIPAllocationMethod
+    dnsSettings: {
+      domainNameLabel: dnsLabelPrefix
+    }
+  }
+}
+
+// TODO: communication between machines in the NSG (first VM shouldn't be able to talk to second vm, etc)
+resource networkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2022-05-01' = {
+  name: networkSecurityGroupName
+  location: location
+  properties: {
+    securityRules: [
+    ]
+  }
+}
+
+resource virtualNetwork 'Microsoft.Network/virtualNetworks@2022-05-01' = {
+  name: virtualNetworkName
+  location: location
+  properties: {
+    addressSpace: {
+      addressPrefixes: [
+        addressPrefix
+      ]
+    }
+    subnets: [
+      {
+        name: subnetName
+        properties: {
+          addressPrefix: subnetPrefix
+          networkSecurityGroup: {
+            id: networkSecurityGroup.id
+          }
+        }
+      }
+    ]
+  }
+}
+
+resource firstNic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
+  name: firstNicName
+  location: location
+  properties: {
+    ipConfigurations: [
+      {
+        name: 'ipconfig1'
+        properties: {
+          privateIPAllocationMethod: 'Dynamic'
+          subnet: {
+            id: resourceId('Microsoft.Network/virtualNetworks/subnets', virtualNetworkName, subnetName)
+          }
+        }
+      }
+    ]
+  }
+  dependsOn: [
+
+    virtualNetwork
+  ]
+}
+
+resource secondNic 'Microsoft.Network/networkInterfaces@2022-05-01' = {
+  name: secondNicName
+  location: location
+  properties: {
+    ipConfigurations: [
+      {
+        name: 'ipconfig2'
+        properties: {
+          privateIPAllocationMethod: 'Dynamic'
+          subnet: {
+            id: resourceId('Microsoft.Network/virtualNetworks/subnets', virtualNetworkName, subnetName)
+          }
+        }
+      }
+    ]
+  }
+  dependsOn: [
+    virtualNetwork
+  ]
+}
+
+resource firstVm 'Microsoft.Compute/virtualMachines@2022-03-01' = {
+  name: firstVmName
+  location: location
+  properties: {
+    hardwareProfile: {
+      vmSize: vmSize
+    }
+    osProfile: {
+      computerName: firstVmName
+      adminUsername: adminUsername
+      adminPassword: adminPassword
+    }
+    storageProfile: {
+      imageReference: {
+        publisher: 'MicrosoftWindowsServer'
+        offer: 'WindowsServer'
+        sku: OSVersion
+        version: 'latest'
+      }
+      osDisk: {
+        createOption: 'FromImage'
+        managedDisk: {
+          storageAccountType: 'StandardSSD_LRS'
+        }
+      }
+      dataDisks: [
+        {
+          diskSizeGB: 1023
+          lun: 0
+          createOption: 'Empty'
+        }
+      ]
+    }
+    networkProfile: {
+      networkInterfaces: [
+        {
+          id: firstNic.id
+        }
+      ]
+    }
+    diagnosticsProfile: {
+      bootDiagnostics: {
+        enabled: true
+        storageUri: storageModule.outputs.storageURI
+      }
+    }
+    securityProfile: ((securityType == 'TrustedLaunch') ? securityProfileJson : json('null'))
+  }
+}
+
+resource firstVmExtension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' = if ((securityType == 'TrustedLaunch') && ((securityProfileJson.uefiSettings.secureBootEnabled == true) && (securityProfileJson.uefiSettings.vTpmEnabled == true))) {
+  parent: firstVm
+  name: extensionName
+  location: location
+  properties: {
+    publisher: extensionPublisher
+    type: extensionName
+    typeHandlerVersion: extensionVersion
+    autoUpgradeMinorVersion: true
+    settings: {
+      AttestationConfig: {
+        MaaSettings: {
+          maaEndpoint: maaEndpoint
+          maaTenantName: maaTenantName
+        }
+      }
+    }
+  }
+}
+
+resource secondVm 'Microsoft.Compute/virtualMachines@2022-03-01' = {
+  name: secondVmName
+  location: location
+  properties: {
+    hardwareProfile: {
+      vmSize: vmSize
+    }
+    osProfile: {
+      computerName: secondVmName
+      adminUsername: adminUsername
+      adminPassword: adminPassword
+    }
+    storageProfile: {
+      imageReference: {
+        publisher: 'MicrosoftWindowsServer'
+        offer: 'WindowsServer'
+        sku: OSVersion
+        version: 'latest'
+      }
+      osDisk: {
+        createOption: 'FromImage'
+        managedDisk: {
+          storageAccountType: 'StandardSSD_LRS'
+        }
+      }
+      dataDisks: [
+        {
+          diskSizeGB: 1023
+          lun: 0
+          createOption: 'Empty'
+        }
+      ]
+    }
+    networkProfile: {
+      networkInterfaces: [
+        {
+          id: secondNic.id
+        }
+      ]
+    }
+    diagnosticsProfile: {
+      bootDiagnostics: {
+        enabled: true
+        storageUri: storageModule.outputs.storageURI
+      }
+    }
+    securityProfile: ((securityType == 'TrustedLaunch') ? securityProfileJson : json('null'))
+  }
+}
+
+resource secondVmExtension 'Microsoft.Compute/virtualMachines/extensions@2022-03-01' = if ((securityType == 'TrustedLaunch') && ((securityProfileJson.uefiSettings.secureBootEnabled == true) && (securityProfileJson.uefiSettings.vTpmEnabled == true))) {
+  parent: secondVm
+  name: extensionName
+  location: location
+  properties: {
+    publisher: extensionPublisher
+    type: extensionName
+    typeHandlerVersion: extensionVersion
+    autoUpgradeMinorVersion: true
+    settings: {
+      AttestationConfig: {
+        MaaSettings: {
+          maaEndpoint: maaEndpoint
+          maaTenantName: maaTenantName
+        }
+      }
+    }
+  }
+}
