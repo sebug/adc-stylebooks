@@ -5,9 +5,12 @@ Trying out some of the infrastructure-as-code features for Citrix ADC.
 
 After all I'm going to be setting up the stuff declaratively, this stuff's expensive.
 
-## Create a Citrix Cloud Account
-You don't necessarily need one to play around with the ADC alone, but the whole goal is to have declarative infrastructure,
-so go create one.
+## Azure AD Set Up
+Set up an Azure AD Application
+
+Name: Test ADC
+
+Add a new client secret. You will need all this after the resources have been set up.
 
 ## Set up Azure resources
 Create a resource group ADCTestRG .
@@ -31,6 +34,48 @@ moment that seems to be the easiest (plus I'm gonna delete those machines often 
 For ADC, I started by enable automatic provisioning of Citrix ADC 13.1 (Express) and enabled that on my subscription. Took the template.json and tried to integrate it in my main.bicep
 
 I enabled the management ports on the management IP and then connected to said IP using HTTP.
+
+On the configuration screen, enter the Azure AD Application ID, Tenant ID and application secret.
+
+Now we have to connect it to ADM
+
+## Create a Citrix Cloud Account
+You don't necessarily need one to play around with the ADC alone, but the whole goal is to have declarative infrastructure,
+so go create one.
+
+Be sure to open the interface in Firefox, Safari is very buggy.
+
+Go to Application Delivery Manager. 
+
+Go to Infrastructure - Instances - Sites
+
+Add a new Site for Azure.
+
+Type: Azure.
+
+Fetch vNet from Azure.
+
+When adding the Azure info, you can use az account list to get the information needed to fill in the first part.
+
+You'll also have to create an application for ADM in Azure AD. Add an application key.
+
+*TODO, didn't get any further.
+
+Go to style books
+
+Configure "StyleBook to configure Load Balanced Applications"
+
+Set 22.22.1.50 as the LB VServer IP address.
+
+Add Servers 22.22.2.10 and 22.22.2.11 on port 80 enable after creating.
+
+Go to Application - Dashboard. Manage applications. Add an application.
+
+Create a new application - define selection criteria. IP address 22.22.1.50
+
+Add a new application "mainapp", add a category "weblb"
+
+
 
 If it is not automatically selected (it should be), set the subnet IP as 22.22.2.6 (or whatever was assigned to the isVMNic interface of your ADC VM).
 
