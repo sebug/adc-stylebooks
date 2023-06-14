@@ -59,7 +59,7 @@ When adding the Azure info, you can use az account list to get the information n
 
 You'll also have to create an application for ADM in Azure AD. Add an application key.
 
-*TODO, didn't get any further.
+*TODO, didn't get any further*
 
 Go to style books
 
