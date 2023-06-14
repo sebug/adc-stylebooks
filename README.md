@@ -5,6 +5,10 @@ Trying out some of the infrastructure-as-code features for Citrix ADC.
 
 After all I'm going to be setting up the stuff declaratively, this stuff's expensive.
 
+## Create a Citrix Cloud Account
+You don't necessarily need one to play around with the ADC alone, but the whole goal is to have declarative infrastructure,
+so go create one.
+
 ## Set up Azure resources
 Create a resource group ADCTestRG .
 
